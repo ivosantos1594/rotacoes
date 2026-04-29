@@ -2,41 +2,135 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<title>Rotações</title>
+<title>Escolha de Rotações</title>
 
 <style>
-body { font-family: Arial; background:#f5f5f5; padding:20px; }
-.card { background:white; padding:20px; margin-top:20px; border-radius:10px; }
-button { padding:10px; margin:5px; }
-</style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  padding: 25px;
+}
 
+.card {
+  background: white;
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+input {
+  padding: 12px;
+  margin: 5px;
+  font-size: 16px;
+}
+
+button {
+  padding: 12px 18px;
+  margin: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sucesso { color: green; font-weight: bold; }
+.aviso { color: darkorange; font-weight: bold; }
+.erro { color: red; font-weight: bold; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  background: white;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+th {
+  background: #eee;
+}
+</style>
 </head>
+
 <body>
 
 <h1>Escolha de Rotações</h1>
 
 <div class="card">
+  <h2>Entrar</h2>
   <input id="codigo" placeholder="Código">
   <input id="pass" type="password" placeholder="Password">
   <button onclick="login()">Entrar</button>
-  <p id="erro" style="color:red;"></p>
+  <p id="erro" class="erro"></p>
 </div>
 
 <div id="app" style="display:none;">
-  <h3 id="info"></h3>
-  <p id="estado"></p>
-  <div id="botoes"></div>
+
+  <div class="card">
+    <h2 id="info"></h2>
+    <p id="estado"></p>
+
+    <div id="areaBotoes">
+      <button onclick="escolher(1)">Rotação 1</button>
+      <button onclick="escolher(2)">Rotação 2</button>
+      <button onclick="escolher(3)">Rotação 3</button>
+      <button onclick="escolher(4)">Rotação 4</button>
+      <button onclick="escolher(5)">Rotação 5</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Estado das rotações</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Rotação</th>
+          <th>N.º alunos</th>
+          <th>Códigos</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaRotacoes"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Ordem de escolha</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Ordem</th>
+          <th>Código</th>
+          <th>Nota</th>
+          <th>Escolha</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaAlunos"></tbody>
+    </table>
+  </div>
+
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
 import {
-  getFirestore, doc, getDoc, setDoc,
-  onSnapshot, runTransaction
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  onSnapshot,
+  runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// 🔥 TEU FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyBMLECbux4OdQpFrMm5cqI1gBHyOVyj1WM",
   authDomain: "rotacoes-medicina-eb667.firebaseapp.com",
@@ -49,114 +143,240 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔹 ALUNOS
 const alunos = [
-  { c:"7adYa", n:20, p:"7adYa123" },
-  { c:"2rd0X", n:19, p:"2rd0X123" },
-  { c:"ANLjX", n:19, p:"ANLjX123" },
-  { c:"v3yEg", n:19, p:"v3yEg123" },
-  { c:"vGaVK", n:19, p:"vGaVK123" },
-  { c:"vKaEg", n:19, p:"vKaEg123" },
-  { c:"2EPxV", n:18, p:"2EPxV123" },
-  { c:"2jBrG", n:18, p:"2jBrG123" },
-  { c:"2QwzN", n:18, p:"2QwzN123" },
-  { c:"7PqR9", n:18, p:"7PqR9123" },
-  { c:"7RwrO", n:18, p:"7RwrO123" },
-  { c:"A95z0", n:18, p:"A95z0123" },
-  { c:"v5mDl", n:18, p:"v5mDl123" },
-  { c:"vzm59", n:18, p:"vzm59123" },
-  { c:"Ag1Qy", n:17, p:"Ag1Qy123" },
-  { c:"vodZZ", n:17, p:"vodZZ123" },
-  { c:"vbd5X", n:16, p:"vbd5X123" },
-  { c:"AZq0M", n:15, p:"AZq0M123" }
+  { c:"7adYa", n:20 },
+  { c:"2rd0X", n:19 },
+  { c:"ANLjX", n:19 },
+  { c:"v3yEg", n:19 },
+  { c:"vGaVK", n:19 },
+  { c:"vKaEg", n:19 },
+  { c:"2EPxV", n:18 },
+  { c:"2jBrG", n:18 },
+  { c:"2QwzN", n:18 },
+  { c:"7PqR9", n:18 },
+  { c:"7RwrO", n:18 },
+  { c:"A95z0", n:18 },
+  { c:"v5mDl", n:18 },
+  { c:"vzm59", n:18 },
+  { c:"Ag1Qy", n:17 },
+  { c:"vodZZ", n:17 },
+  { c:"vbd5X", n:16 },
+  { c:"AZq0M", n:15 }
 ];
 
-let user = null;
-const ref = doc(db,"rotacoes","estado");
+const ref = doc(db, "rotacoes", "estado");
 
-// 🔹 INICIALIZAR
-async function init(){
-  const s = await getDoc(ref);
-  if(!s.exists()){
-    await setDoc(ref,{
-      alunos: alunos.map((a,i)=>({...a,ord:i+1,esc:null})),
-      rot:[[],[],[],[],[]]
+let user = null;
+let dados = null;
+
+async function init() {
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      alunos: alunos.map((a, i) => ({
+        ...a,
+        ordem: i + 1,
+        esc: null
+      })),
+      rotacoes: {
+        1: [],
+        2: [],
+        3: [],
+        4: [],
+        5: []
+      }
     });
   }
 }
-init();
 
-// 🔹 REALTIME
-onSnapshot(ref,s=>{
-  if(user) render(s.data());
+await init();
+
+onSnapshot(ref, snap => {
+  dados = snap.data();
+  if (user) render();
 });
 
-// 🔹 LOGIN (CORRIGIDO COM TRIM)
-window.login = function(){
+window.login = function() {
   const c = document.getElementById("codigo").value.trim();
   const p = document.getElementById("pass").value.trim();
 
-  const a = alunos.find(x=>x.c===c && x.p===p);
-
-  if(!a){
-    document.getElementById("erro").innerText="Login inválido";
+  if (c.toUpperCase() === "ADMIN" && p === "admin123") {
+    user = "ADMIN";
+    document.getElementById("erro").innerText = "";
+    document.getElementById("app").style.display = "block";
+    render();
     return;
   }
 
-  user = c;
-  document.getElementById("erro").innerText="";
-  document.getElementById("app").style.display="block";
+  const aluno = alunos.find(a =>
+    a.c.toLowerCase() === c.toLowerCase()
+  );
+
+  if (!aluno) {
+    document.getElementById("erro").innerText = "Código inválido.";
+    return;
+  }
+
+  if (!(p === "1234" || p === aluno.c + "123")) {
+    document.getElementById("erro").innerText = "Password inválida.";
+    return;
+  }
+
+  user = aluno.c;
+  document.getElementById("erro").innerText = "";
+  document.getElementById("app").style.display = "block";
+  render();
 };
 
-// 🔹 VEZ
-function vez(d){
-  return d.alunos.find(a=>!a.esc);
+function alunoDaVez() {
+  return dados.alunos.find(a => a.esc === null);
 }
 
-// 🔹 RENDER
-function render(d){
-  const a = d.alunos.find(x=>x.c===user);
-  const v = vez(d);
+function contarRotacoesCom4() {
+  return Object.values(dados.rotacoes).filter(r => r.length === 4).length;
+}
+
+function podeEscolherRotacao(num) {
+  const tamanho = dados.rotacoes[num].length;
+  const rotacoesCom4 = contarRotacoesCom4();
+
+  if (tamanho >= 4) return false;
+  if (tamanho === 3 && rotacoesCom4 >= 3) return false;
+
+  return true;
+}
+
+function render() {
+  if (!dados) return;
+
+  atualizarTabelaRotacoes();
+  atualizarTabelaAlunos();
+
+  const botoes = document.querySelectorAll("#areaBotoes button");
+
+  if (user === "ADMIN") {
+    document.getElementById("info").innerText = "Painel de administrador";
+    document.getElementById("estado").innerHTML =
+      "<span class='sucesso'>Consulta em tempo real das escolhas.</span>";
+
+    botoes.forEach(b => b.disabled = true);
+    return;
+  }
+
+  const aluno = dados.alunos.find(a => a.c === user);
+  const vez = alunoDaVez();
 
   document.getElementById("info").innerText =
-    `Código ${a.c} | Nota ${a.n}`;
+    `Código: ${aluno.c} | Nota: ${aluno.n} | Ordem: ${aluno.ordem}`;
 
-  const div = document.getElementById("botoes");
-  div.innerHTML="";
+  if (aluno.esc !== null) {
+    document.getElementById("estado").innerHTML =
+      `<span class="sucesso">Já escolheste a Rotação ${aluno.esc}.</span>`;
+  } else if (!vez) {
+    document.getElementById("estado").innerHTML =
+      `<span class="sucesso">Todas as escolhas terminaram.</span>`;
+  } else if (vez.c === user) {
+    document.getElementById("estado").innerHTML =
+      `<span class="sucesso">É a tua vez de escolher.</span>`;
+  } else {
+    const faltam = aluno.ordem - vez.ordem;
 
-  for(let i=1;i<=5;i++){
-    const b=document.createElement("button");
-    b.innerText="Rotação "+i;
+    document.getElementById("estado").innerHTML =
+      `<span class="aviso">Ainda não é a tua vez. Faltam ${faltam} pessoa(s) antes de ti.</span>`;
+  }
 
-    const cheio = d.rot[i-1].length>=4;
-    const limite = d.rot.filter(r=>r.length==4).length>=3;
+  botoes.forEach((botao, index) => {
+    const numRotacao = index + 1;
 
     const pode =
-      !a.esc &&
-      v.c===user &&
-      !cheio &&
-      !(d.rot[i-1].length==3 && limite);
+      aluno.esc === null &&
+      vez &&
+      vez.c === user &&
+      podeEscolherRotacao(numRotacao);
 
-    b.disabled=!pode;
-    b.onclick=()=>escolher(i);
+    botao.disabled = !pode;
+  });
+}
 
-    div.appendChild(b);
+window.escolher = async function(numRotacao) {
+  if (!user || user === "ADMIN") return;
+
+  try {
+    await runTransaction(db, async transaction => {
+      const snap = await transaction.get(ref);
+      const d = snap.data();
+
+      const alunoIndex = d.alunos.findIndex(a => a.c === user);
+      const aluno = d.alunos[alunoIndex];
+
+      if (aluno.esc !== null) {
+        throw new Error("Já escolheste.");
+      }
+
+      const vez = d.alunos.find(a => a.esc === null);
+
+      if (!vez || vez.c !== user) {
+        throw new Error("Ainda não é a tua vez.");
+      }
+
+      const tamanho = d.rotacoes[numRotacao].length;
+      const rotacoesCom4 = Object.values(d.rotacoes).filter(r => r.length === 4).length;
+
+      if (tamanho >= 4) {
+        throw new Error("Esta rotação já está cheia.");
+      }
+
+      if (tamanho === 3 && rotacoesCom4 >= 3) {
+        throw new Error("Esta rotação já não pode receber mais alunos.");
+      }
+
+      d.alunos[alunoIndex].esc = numRotacao;
+      d.rotacoes[numRotacao].push(user);
+
+      transaction.update(ref, d);
+    });
+
+    alert("Escolha registada com sucesso.");
+
+  } catch (e) {
+    alert(e.message);
+  }
+};
+
+function atualizarTabelaRotacoes() {
+  const tbody = document.getElementById("tabelaRotacoes");
+  tbody.innerHTML = "";
+
+  for (let i = 1; i <= 5; i++) {
+    const lista = dados.rotacoes[i];
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>Rotação ${i}</td>
+      <td>${lista.length}</td>
+      <td>${lista.length ? lista.join(", ") : "-"}</td>
+    `;
+
+    tbody.appendChild(tr);
   }
 }
 
-// 🔹 ESCOLHER
-async function escolher(r){
-  await runTransaction(db,async t=>{
-    const s=await t.get(ref);
-    const d=s.data();
+function atualizarTabelaAlunos() {
+  const tbody = document.getElementById("tabelaAlunos");
+  tbody.innerHTML = "";
 
-    const i=d.alunos.findIndex(a=>a.c===user);
-    if(d.alunos[i].esc) return;
+  dados.alunos.forEach(a => {
+    const tr = document.createElement("tr");
 
-    d.alunos[i].esc=r;
-    d.rot[r-1].push(user);
+    tr.innerHTML = `
+      <td>${a.ordem}</td>
+      <td>${a.c}</td>
+      <td>${a.n}</td>
+      <td>${a.esc ? "Rotação " + a.esc : "-"}</td>
+    `;
 
-    t.update(ref,d);
+    tbody.appendChild(tr);
   });
 }
 
