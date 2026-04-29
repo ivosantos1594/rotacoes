@@ -36,7 +36,7 @@ import {
   onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// 🔥 O TEU FIREBASE
+// 🔥 TEU FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyBMLECbux4OdQpFrMm5cqI1gBHyOVyj1WM",
   authDomain: "rotacoes-medicina-eb667.firebaseapp.com",
@@ -49,7 +49,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔹 LISTA ALUNOS (NA = 15)
+// 🔹 ALUNOS
 const alunos = [
   { c:"7adYa", n:20, p:"7adYa123" },
   { c:"2rd0X", n:19, p:"2rd0X123" },
@@ -74,7 +74,7 @@ const alunos = [
 let user = null;
 const ref = doc(db,"rotacoes","estado");
 
-// 🔹 INICIALIZAR BASE
+// 🔹 INICIALIZAR
 async function init(){
   const s = await getDoc(ref);
   if(!s.exists()){
@@ -91,10 +91,10 @@ onSnapshot(ref,s=>{
   if(user) render(s.data());
 });
 
-// 🔹 LOGIN
+// 🔹 LOGIN (CORRIGIDO COM TRIM)
 window.login = function(){
-  const c = document.getElementById("codigo").value;
-  const p = document.getElementById("pass").value;
+  const c = document.getElementById("codigo").value.trim();
+  const p = document.getElementById("pass").value.trim();
 
   const a = alunos.find(x=>x.c===c && x.p===p);
 
@@ -104,10 +104,11 @@ window.login = function(){
   }
 
   user = c;
+  document.getElementById("erro").innerText="";
   document.getElementById("app").style.display="block";
 };
 
-// 🔹 QUEM ESTÁ A ESCOLHER
+// 🔹 VEZ
 function vez(d){
   return d.alunos.find(a=>!a.esc);
 }
