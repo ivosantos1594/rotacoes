@@ -3,20 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <title>Rotações</title>
+
 <style>
-body { font-family: Arial; padding: 20px; background:#f5f5f5; }
+body { font-family: Arial; background:#f5f5f5; padding:20px; }
 .card { background:white; padding:20px; margin-top:20px; border-radius:10px; }
 button { padding:10px; margin:5px; }
 </style>
-</head>
 
+</head>
 <body>
 
 <h1>Escolha de Rotações</h1>
 
 <div class="card">
   <input id="codigo" placeholder="Código">
-  <input id="pass" placeholder="Password" type="password">
+  <input id="pass" type="password" placeholder="Password">
   <button onclick="login()">Entrar</button>
   <p id="erro" style="color:red;"></p>
 </div>
@@ -35,18 +36,20 @@ import {
   onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// 🔥 O TEU FIREBASE
 const firebaseConfig = {
-  apiKey: "AIzaSyCNZ1IQ5hfYR6P1GjWrhTu2S6sXR2-lc2Q",
-  authDomain: "rotacoes-medicina.firebaseapp.com",
-  projectId: "rotacoes-medicina",
-  storageBucket: "rotacoes-medicina.firebasestorage.app",
-  messagingSenderId: "423261465889",
-  appId: "1:423261465889:web:ebe7ccab01ee07c01e6260"
+  apiKey: "AIzaSyBMLECbux4OdQpFrMm5cqI1gBHyOVyj1WM",
+  authDomain: "rotacoes-medicina-eb667.firebaseapp.com",
+  projectId: "rotacoes-medicina-eb667",
+  storageBucket: "rotacoes-medicina-eb667.firebasestorage.app",
+  messagingSenderId: "1031472874358",
+  appId: "1:1031472874358:web:051a0759a350b2ac4eb057"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// 🔹 LISTA ALUNOS (NA = 15)
 const alunos = [
   { c:"7adYa", n:20, p:"7adYa123" },
   { c:"2rd0X", n:19, p:"2rd0X123" },
@@ -65,64 +68,71 @@ const alunos = [
   { c:"Ag1Qy", n:17, p:"Ag1Qy123" },
   { c:"vodZZ", n:17, p:"vodZZ123" },
   { c:"vbd5X", n:16, p:"vbd5X123" },
-  { c:"AZq0M", n:15, p:"AZq0M123" } // NA → 15
+  { c:"AZq0M", n:15, p:"AZq0M123" }
 ];
 
-let user=null;
-const ref=doc(db,"rotacoes","estado");
+let user = null;
+const ref = doc(db,"rotacoes","estado");
 
+// 🔹 INICIALIZAR BASE
 async function init(){
-  const s=await getDoc(ref);
+  const s = await getDoc(ref);
   if(!s.exists()){
     await setDoc(ref,{
-      alunos: alunos.map((a,i)=>({...a,o:i+1,e:null})),
+      alunos: alunos.map((a,i)=>({...a,ord:i+1,esc:null})),
       rot:[[],[],[],[],[]]
     });
   }
 }
 init();
 
+// 🔹 REALTIME
 onSnapshot(ref,s=>{
   if(user) render(s.data());
 });
 
-window.login=function(){
-  const c=document.getElementById("codigo").value;
-  const p=document.getElementById("pass").value;
+// 🔹 LOGIN
+window.login = function(){
+  const c = document.getElementById("codigo").value;
+  const p = document.getElementById("pass").value;
 
-  const a=alunos.find(x=>x.c===c && x.p===p);
+  const a = alunos.find(x=>x.c===c && x.p===p);
 
   if(!a){
     document.getElementById("erro").innerText="Login inválido";
     return;
   }
 
-  user=c;
+  user = c;
   document.getElementById("app").style.display="block";
 };
 
+// 🔹 QUEM ESTÁ A ESCOLHER
 function vez(d){
-  return d.alunos.find(a=>!a.e);
+  return d.alunos.find(a=>!a.esc);
 }
 
+// 🔹 RENDER
 function render(d){
-  const a=d.alunos.find(x=>x.c===user);
-  const v=vez(d);
+  const a = d.alunos.find(x=>x.c===user);
+  const v = vez(d);
 
-  document.getElementById("info").innerText=
+  document.getElementById("info").innerText =
     `Código ${a.c} | Nota ${a.n}`;
 
-  const div=document.getElementById("botoes");
+  const div = document.getElementById("botoes");
   div.innerHTML="";
 
   for(let i=1;i<=5;i++){
     const b=document.createElement("button");
     b.innerText="Rotação "+i;
 
-    const cheio=d.rot[i-1].length>=4;
-    const limite=d.rot.filter(r=>r.length==4).length>=3;
+    const cheio = d.rot[i-1].length>=4;
+    const limite = d.rot.filter(r=>r.length==4).length>=3;
 
-    const pode=!a.e && v.c===user &&
+    const pode =
+      !a.esc &&
+      v.c===user &&
       !cheio &&
       !(d.rot[i-1].length==3 && limite);
 
@@ -133,15 +143,16 @@ function render(d){
   }
 }
 
+// 🔹 ESCOLHER
 async function escolher(r){
   await runTransaction(db,async t=>{
     const s=await t.get(ref);
     const d=s.data();
 
     const i=d.alunos.findIndex(a=>a.c===user);
-    if(d.alunos[i].e) return;
+    if(d.alunos[i].esc) return;
 
-    d.alunos[i].e=r;
+    d.alunos[i].esc=r;
     d.rot[r-1].push(user);
 
     t.update(ref,d);
